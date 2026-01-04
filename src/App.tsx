@@ -148,17 +148,45 @@ const AppContent = () => {
       // Ctrl+V (Paste)
       if ((e.ctrlKey || e.metaKey) && e.key === "v") {
         navigator.clipboard
-          .readText()
-          .then((text) => {
-            const hexMatch = text.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
-            if (hexMatch) {
-              let hex = hexMatch[0];
-              if (!hex.startsWith("#")) hex = "#" + hex;
-              updateSelectedColor(hex);
-              showToast(`Pasted ${hex}`, "success");
+          .read()
+          .then(async (clipboardItems) => {
+            if (clipboardItems.length > 0) {
+              const item = clipboardItems[0];
+              // Find the first image type available in the item
+              const imageType = item.types.find((type) =>
+                type.startsWith("image/")
+              );
+
+              if (imageType) {
+                try {
+                  const blob = await item.getType(imageType);
+                  const file = new File([blob], "pasted-image", {
+                    type: imageType,
+                  });
+                  processImage(file);
+                  showToast("Image pasted successfully", "success");
+                  return; // Stop processing if image found
+                } catch (err) {
+                  console.error("Failed to retrieve image blob:", err);
+                }
+              }
             }
+
+            // Fallback to text if no image found or retrieval failed
+            throw new Error("No image found");
           })
-          .catch(() => { });
+          .catch(() => {
+            // Fallback: Read text
+            navigator.clipboard.readText().then((text) => {
+              const hexMatch = text.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+              if (hexMatch) {
+                let hex = hexMatch[0];
+                if (!hex.startsWith("#")) hex = "#" + hex;
+                updateSelectedColor(hex);
+                showToast(`Pasted ${hex}`, "success");
+              }
+            });
+          });
       }
 
       // / (Focus Input)
