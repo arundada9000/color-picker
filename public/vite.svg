@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="rainbowDrop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF0000;stop-opacity:1" />
+      <stop offset="20%" style="stop-color:#FF7F00;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#FFFF00;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#00FF00;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#0000FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B00FF;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <path d="M58.3,5.7c-3.9-3.9-10.2-3.9-14.1,0L28.9,21.1c-0.6-0.6-1.5-0.6-2.1,0l-5.7,5.7c-0.6,0.6-0.6,1.5,0,2.1l4.3,4.3
+	L7.6,51c-0.4,0.4-0.6,0.9-0.7,1.4L4.1,62.1c-0.1,0.5,0,1,0.4,1.4c0.3,0.3,0.8,0.5,1.2,0.5c0.1,0,0.1,0,0.2,0l9.7-2.8
+	c0.5-0.1,1-0.4,1.4-0.7l17.8-17.8l4.3,4.3c0.3,0.3,0.7,0.4,1.1,0.4c0.4,0,0.8-0.1,1.1-0.4l5.7-5.7c0.6-0.6,0.6-1.5,0-2.1
+	l15.3-15.3C62.2,15.9,62.2,9.6,58.3,5.7z M13.7,58L8,59.6l1.7-5.7l15.9-15.9l4.1,4.1L13.7,58z" fill="#232323"/>
+  
+  <circle cx="10.5" cy="57.5" r="3.5" fill="url(#rainbowDrop)"/>
+</svg>

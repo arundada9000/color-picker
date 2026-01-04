@@ -1,0 +1,64 @@
+.palette-container {
+    margin-top: var(--spacing-lg);
+    width: 100%;
+}
+
+.palette-container h3 {
+    font-size: var(--font-size-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--color-text-main);
+    font-weight: 500;
+}
+
+.swatch-grid {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.swatch-btn {
+    flex: 1;
+    min-width: 80px;
+    height: 60px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.swatch-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.swatch-label {
+    opacity: 0;
+    transform: translateY(5px);
+    transition: var(--transition-normal);
+}
+
+.swatch-btn:hover .swatch-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.export-btn {
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    padding: 4px;
+    border-radius: 4px;
+    transition: var(--transition-fast);
+    display: flex;
+    border: 1px solid transparent;
+}
+
+.export-btn:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--color-text-main);
+    border-color: var(--glass-border);
+}
