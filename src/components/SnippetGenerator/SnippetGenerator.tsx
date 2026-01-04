@@ -1,40 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SnippetGenerator.css';
-import { hexToRgb, rgbToHsl } from '../../utils/colorUtils';
+import { generateSnippet } from '../../utils/snippetUtils';
+import type { Framework, Property, Format } from '../../utils/snippetUtils';
 
 interface SnippetGeneratorProps {
     selectedHex: string;
+    framework: Framework;
+    setFramework: (val: Framework) => void;
+    property: Property;
+    setProperty: (val: Property) => void;
+    format: Format;
+    setFormat: (val: Format) => void;
 }
 
-type Framework = 'css' | 'tailwind';
-type Property = 'bg' | 'text' | 'border';
-type Format = 'hex' | 'rgb' | 'hsl';
-
-export const SnippetGenerator: React.FC<SnippetGeneratorProps> = ({ selectedHex }) => {
-    const [framework, setFramework] = useState<Framework>('css');
-    const [property, setProperty] = useState<Property>('bg');
-    const [format, setFormat] = useState<Format>('hex');
+export const SnippetGenerator: React.FC<SnippetGeneratorProps> = ({
+    selectedHex, framework, setFramework, property, setProperty, format, setFormat
+}) => {
     const [copied, setCopied] = useState(false);
-
-    const getCode = () => {
-        const rgb = hexToRgb(selectedHex);
-        const hsl = rgb ? rgbToHsl(rgb) : null;
-
-        let colorValue = selectedHex;
-        if (format === 'rgb' && rgb) colorValue = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-        if (format === 'hsl' && hsl) colorValue = `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
-
-        if (framework === 'tailwind') {
-            const prefix = property === 'bg' ? 'bg' : property === 'text' ? 'text' : 'border';
-            // Tailwind arbitrary value syntax
-            return `${prefix}-[${colorValue}]`;
-        } else {
-            const propName = property === 'bg' ? 'background-color' : property === 'text' ? 'color' : 'border-color';
-            return `${propName}: ${colorValue};`;
-        }
-    };
-
-    const code = getCode();
+    const code = generateSnippet(selectedHex, framework, property, format);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(code);

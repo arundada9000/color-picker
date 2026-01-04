@@ -10,15 +10,21 @@ import { ColorHistory } from "./components/ColorHistory/ColorHistory";
 import { SnippetGenerator } from "./components/SnippetGenerator/SnippetGenerator";
 import { ColorSuggestions } from "./components/ColorSuggestions/ColorSuggestions";
 import { AboutModal } from "./components/AboutModal/AboutModal";
-import { ContactModal } from "./components/ContactModal/ContactModal"; // New Import
+import { ContactModal } from "./components/ContactModal/ContactModal";
+import { ToastProvider, useToast } from "./components/Toast/Toast";
+import { ContextMenu } from "./components/ContextMenu/ContextMenu";
 import { extractDominantColors, loadImage } from "./utils/imageUtils";
+import { hexToRgb } from "./utils/colorUtils";
 
 const DEMO_IMAGE_URL =
   "https://images.unsplash.com/photo-1541701494587-cb58502866ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
 
-export default function App() {
+import { generateSnippet } from "./utils/snippetUtils"; // New Import
+import type { Framework, Property, Format } from "./utils/snippetUtils";
+
+const AppContent = () => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState<string>("#6366f1");
   const [hoverColor, setHoverColor] = useState<string | null>(null);
   const [palette, setPalette] = useState<string[]>([]);
   const [history, setHistory] = useState<string[]>(() => {
@@ -30,7 +36,14 @@ export default function App() {
     "details"
   );
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isContactOpen, setIsContactOpen] = useState(false); // New State
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
+  // Snippet Settings State (Lifted Up)
+  const [framework, setFramework] = useState<Framework>("css");
+  const [property, setProperty] = useState<Property>("bg");
+  const [format, setFormat] = useState<Format>("hex");
+
+  const { showToast } = useToast();
 
   useEffect(() => {
     localStorage.setItem("colorHistory", JSON.stringify(history));
@@ -38,15 +51,17 @@ export default function App() {
 
   const addToHistory = (color: string) => {
     setHistory((prev) => {
-      const filtered = prev.filter((c) => c !== color);
-      return [color, ...filtered].slice(0, 10);
+      const newHistory = [color, ...prev.filter((c) => c !== color)].slice(
+        0,
+        10
+      );
+      return newHistory;
     });
   };
 
   const updateSelectedColor = (color: string) => {
     setSelectedColor(color);
     addToHistory(color);
-    // If user is currently in Suggest tab, switch to Details to show values
     if (activeTab === "suggest") {
       setActiveTab("details");
     }
@@ -54,65 +69,141 @@ export default function App() {
 
   const processImage = async (source: string | File) => {
     try {
-      let url: string;
-      if (typeof source === "string") {
-        url = source;
-      } else {
-        url = URL.createObjectURL(source);
-      }
-
+      const url =
+        typeof source === "string" ? source : URL.createObjectURL(source);
       setImageSrc(url);
       setIsStandalone(false);
       const img = await loadImage(source);
-      try {
-        const extracted = extractDominantColors(img);
-        setPalette(extracted);
-        if (extracted.length > 0) updateSelectedColor(extracted[0]);
-      } catch (e) {
-        console.warn("Could not extract colors (CORS potentially)", e);
-        setPalette([]);
-      }
-    } catch (e) {
-      console.error(e);
+      const colors = extractDominantColors(img);
+      setPalette(colors);
+      if (colors.length > 0) updateSelectedColor(colors[0]);
+    } catch (error) {
+      console.error("Failed to process image", error);
+      showToast("Failed to load image", "error");
     }
-  };
-
-  const handleDemoClick = () => processImage(DEMO_IMAGE_URL);
-
-  const handleStandaloneClick = () => {
-    setImageSrc(null);
-    setIsStandalone(true);
-    setPalette([]);
-    setSelectedColor("#6366f1");
   };
 
   const resetApp = () => {
     setImageSrc(null);
     setIsStandalone(false);
-    setSelectedColor(null);
     setPalette([]);
+    setHistory([]);
+    setSelectedColor("#6366f1");
+    showToast("App Reset", "info");
   };
+
+  const goHome = () => {
+    setImageSrc(null);
+    setIsStandalone(false);
+    // Do not clear history or palette
+  };
+
+  const handlePickScreen = async () => {
+    if (!("EyeDropper" in window)) {
+      showToast("EyeDropper not supported in this browser", "error");
+      return;
+    }
+    // @ts-ignore
+    const eyeDropper = new window.EyeDropper();
+    try {
+      const result = await eyeDropper.open();
+      updateSelectedColor(result.sRGBHex);
+      showToast(`Picked ${result.sRGBHex}`, "success");
+    } catch (e) {
+      // User canceled
+    }
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    showToast("Copied to clipboard!", "success");
+  };
+
+  const handleCopySnippet = () => {
+    const code = generateSnippet(selectedColor, framework, property, format);
+    handleCopy(code);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Esc
+      if (e.key === "Escape") {
+        setIsAboutOpen(false);
+        setIsContactOpen(false);
+      }
+
+      // Ctrl+C (Copy)
+      if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+        if (!window.getSelection()?.toString()) {
+          e.preventDefault();
+          if (activeTab === "code") {
+            handleCopySnippet();
+          } else {
+            navigator.clipboard.writeText(selectedColor);
+            showToast(`Copied ${selectedColor}`, "success");
+          }
+        }
+      }
+
+      // Ctrl+V (Paste)
+      if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            const hexMatch = text.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+            if (hexMatch) {
+              let hex = hexMatch[0];
+              if (!hex.startsWith("#")) hex = "#" + hex;
+              updateSelectedColor(hex);
+              showToast(`Pasted ${hex}`, "success");
+            }
+          })
+          .catch(() => { });
+      }
+
+      // / (Focus Input)
+      if (e.key === "/") {
+        const input = document.getElementById("manual-hex-input");
+        if (input) {
+          e.preventDefault();
+          input.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedColor, activeTab, framework, property, format]); // Added dependencies
 
   const activeColor = hoverColor || selectedColor;
 
   return (
-    // Pass openAbout to Layout or just render modal here.
-    // We need to modify Layout to accept onAboutClick if we want it in header,
-    // BUT Layout prop interface isn't flexible roughly yet.
-    // Let's modify Layout or just add a floating button?
-    // Ideally update Layout. Let's do that in a follow up or just hack it here.
-    // Actually, Layout wraps children, so we can pass a prop if we update Layout definition.
-    // For now, let's put the About button in the footer or header if accessible.
-    // Wait, I can pass a custom header prop to Layout? No.
-    // I will Render Layout and pass CHILDREN.
-    // I will add the About Modal here near Layout.
     <Layout>
+      <ContextMenu
+        onPickScreen={handlePickScreen}
+        onCopyHex={() => handleCopy(selectedColor)}
+        onCopyRgb={() => {
+          const rgb = hexToRgb(selectedColor);
+          if (rgb) handleCopy(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+        }}
+        onCopySnippet={handleCopySnippet}
+        onSaveFavorite={() => {
+          // Check if already in palette, if not add it
+          if (!palette.includes(selectedColor)) {
+            setPalette((prev) => [selectedColor, ...prev]);
+            showToast("Saved to Palette", "success");
+          } else {
+            showToast("Already in Palette", "info");
+          }
+        }}
+        onReset={resetApp}
+      />
+
       <div
         style={{
-          position: "absolute",
+          position: "fixed",
           top: "1rem",
           right: "2rem",
-          zIndex: 100,
+          zIndex: 1000,
           display: "flex",
           gap: "1rem",
         }}
@@ -120,14 +211,24 @@ export default function App() {
         <button
           onClick={() => setIsAboutOpen(true)}
           className="secondary-btn"
-          style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}
+          style={{
+            padding: "0.4rem 1rem",
+            fontSize: "0.8rem",
+            background: "rgba(30, 30, 36, 0.8)",
+            backdropFilter: "blur(10px)",
+          }}
         >
           About
         </button>
         <button
           onClick={() => setIsContactOpen(true)}
           className="secondary-btn"
-          style={{ padding: "0.4rem 1rem", fontSize: "0.8rem" }}
+          style={{
+            padding: "0.4rem 1rem",
+            fontSize: "0.8rem",
+            background: "rgba(30, 30, 36, 0.8)",
+            backdropFilter: "blur(10px)",
+          }}
         >
           Contact
         </button>
@@ -141,32 +242,27 @@ export default function App() {
 
       {!imageSrc && !isStandalone ? (
         <div className="app-container-center">
-          <h1 className="app-heading-gradient">Color Picker</h1>
-          <p
-            style={{
-              marginBottom: "3rem",
-              color: "var(--color-text-muted)",
-              fontSize: "1.2rem",
-            }}
-          >
-            Professional color extraction and conversion tool.
+          <h1 className="hero-title">Chroma</h1>
+          <p className="hero-subtitle">
+            Professional Image Color Extraction & Conversion
           </p>
 
           <ImageUploader onImageSelect={processImage} />
 
-          <div
-            style={{
-              marginTop: "2rem",
-              display: "flex",
-              gap: "1rem",
-              justifyContent: "center",
-            }}
-          >
-            <button className="secondary-btn" onClick={handleDemoClick}>
+          {/* <div className="divider-text">OR</div> */}
+
+          <div className="hero-actions">
+            <button
+              className="primary-btn"
+              onClick={() => processImage(DEMO_IMAGE_URL)}
+            >
               Try Demo Image
             </button>
-            <button className="secondary-btn" onClick={handleStandaloneClick}>
-              Use Without Image
+            <button
+              className="secondary-btn"
+              onClick={() => setIsStandalone(true)}
+            >
+              Open Color Picker
             </button>
           </div>
 
@@ -185,7 +281,7 @@ export default function App() {
           <div className="workspace-left">
             <div className="picker-header">
               <button
-                onClick={resetApp}
+                onClick={goHome}
                 style={{
                   color: "var(--color-text-muted)",
                   display: "flex",
@@ -252,25 +348,22 @@ export default function App() {
 
                 <div className="tool-tabs">
                   <button
-                    className={`tab-btn ${
-                      activeTab === "details" ? "active" : ""
-                    }`}
+                    className={`tab-btn ${activeTab === "details" ? "active" : ""
+                      }`}
                     onClick={() => setActiveTab("details")}
                   >
                     Details
                   </button>
                   <button
-                    className={`tab-btn ${
-                      activeTab === "code" ? "active" : ""
-                    }`}
+                    className={`tab-btn ${activeTab === "code" ? "active" : ""
+                      }`}
                     onClick={() => setActiveTab("code")}
                   >
                     Code
                   </button>
                   <button
-                    className={`tab-btn ${
-                      activeTab === "suggest" ? "active" : ""
-                    }`}
+                    className={`tab-btn ${activeTab === "suggest" ? "active" : ""
+                      }`}
                     onClick={() => setActiveTab("suggest")}
                   >
                     Suggest
@@ -285,7 +378,15 @@ export default function App() {
                     />
                   )}
                   {activeTab === "code" && (
-                    <SnippetGenerator selectedHex={selectedColor} />
+                    <SnippetGenerator
+                      selectedHex={selectedColor}
+                      framework={framework}
+                      setFramework={setFramework}
+                      property={property}
+                      setProperty={setProperty}
+                      format={format}
+                      setFormat={setFormat}
+                    />
                   )}
                   {activeTab === "suggest" && (
                     <ColorSuggestions
@@ -312,5 +413,13 @@ export default function App() {
         </div>
       )}
     </Layout>
+  );
+};
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <AppContent />
+    </ToastProvider>
   );
 }
