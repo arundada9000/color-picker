@@ -13,6 +13,12 @@ A professional-grade, privacy-first color extraction and manipulation tool built
 
 [Live Preview](https://easycolorpicker.vercel.app)
 
+## Screenshot
+
+<p align="center">
+<img src="./public/preview.png" width="400">
+</p>
+
 ## Features
 
 - **Smart Extraction**: Automatically identifies dominant colors from any image (Drag & Drop support).
@@ -68,9 +74,20 @@ A professional-grade, privacy-first color extraction and manipulation tool built
 2.  **Pick**: Hover over the image to inspect. Click to "freeze" a color selection.
 3.  **Refine**: Click the active color circle to manually adjust the color using the system picker.
 4.  **Use**:
-    - **Details Tab**: Get raw values.
     - **Code Tab**: Get copy-paste CSS/Tailwind code.
     - **Suggest Tab**: Find matching design tokens.
+
+## Power Features (New!)
+
+- **Smart Context Menu** (Right-Click):
+  - **Pick from Screen**: Use the EyeDropper API to pick colors from _other_ apps or windows.
+  - **Save to Palette**: Quickly save a color for later.
+  - **Quick Copy**: One-click access to values.
+- **Keyboard Shortcuts**:
+  - `Ctrl + C`: Smart Copy (Copies HEX in details view, copies CSS class in Code view).
+  - `Ctrl + V`: Paste any HEX code validates and loads it instantly.
+  - `/`: Focus the manual input field.
+  - `Esc`: Close all Modals.
 
 ## License
 

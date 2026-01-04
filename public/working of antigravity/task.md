@@ -1,0 +1,52 @@
+# Tasks
+
+- [x] Initialize Project
+    - [x] Create Vite + React + TypeScript project
+    - [x] Set up project structure
+- [x] Implementation Plan
+    - [x] Create implementation_plan.md
+    - [x] Review and refine plan
+- [x] Core Logic Implementation
+    - [x] Color conversion utilities (HEX, RGB, HSL, CMYK, etc.)
+    - [x] Color extraction from image (Canvas/EyeDropper API)
+    - [x] Palette generation logic
+- [x] UI Implementation
+    - [x] Main Layout & Design System (Vanilla CSS with Variables)
+    - [x] Image Uploader Component
+    - [x] Image Interactive Area (Canvas based picker)
+    - [x] Standard Color Selector (Native + Custom UI wrapper)
+    - [x] Extracted Palette Display
+    - [x] Color Details & Converter Panel
+    - [x] Clipboard Actions
+- [/] Polish & Review
+    - [x] Visual polish (Gradients, Glassmorphism, Animations)
+    - [x] Responsive adjustments (Mobile Layout Fixes)
+    - [x] Final Verification
+    - [x] Fix Color Accuracy & Add Magnifier
+    - [x] Add Explicit Manual Color Picker
+    - [x] Improve Color Converter Visibility
+- [x] Final Enhancements
+    - [x] Final Enhancements V2
+    - [x] Feature: Advanced Harmonies (Analogous, Triadic, Split-Comp)
+    - [x] UI: Add Contact Button
+    - [x] Final Features V8 (Shortcuts & Context Menu)
+    - [x] Feature: Toast Notification System (Copied/Errors)
+    - [x] Feature: Keyboard Shortcuts (Ctrl+C/V, Esc, /)
+    - [x] Feature: EyeDropper API Integration (Pick from Screen)
+    - [x] UI: Custom Context Menu (6+ Items)
+        - [x] Pick from Screen
+        - [x] Copy HEX / RGB
+        - [x] Copy CSS Snippet
+        - [x] Reset App
+    - [x] Suggestion: Color History
+    - [x] Suggestion: Export Palette
+- [x] Advanced Features
+    - [x] Documentation Updates (About Modal & README)
+    - [x] Fix Magnifier Nuisance (Stationary/Toggle)
+    - [x] Code Snippet Generator (Vanilla/Tailwind, Props, Formats)
+- [x] Final UI/UX Polish
+    - [/] Final UI/UX Polish
+    - [x] RESTORE Cursor on Image (Custom/Crosshair)
+    - [x] Style Snippet Select Boxes (Fixed Overflow)
+    - [x] Implement About Page (Modal) (Removed Duplicate)
+    - [x] Feature: Color Suggestions (Hover/Active states) (Fixed Tab Interaction)
